@@ -7,11 +7,9 @@ import { Container, Box } from "@chakra-ui/react";
 import Header from "./components/Header";
 import { Button } from "@chakra-ui/react";
 import KeywordsModal from "./components/KeywordsModal";
+import imageCompression from "browser-image-compression";
 import Footer from "./components/Footer";
-const options = {
-  apiKey: "free", // Get API keys from: www.bytescale.com
-  maxFileCount: 1,
-};
+
 function App() {
   const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
   const [data, setData] = useState(undefined);
@@ -22,42 +20,17 @@ function App() {
     "Explain this image in around 50 words"
   );
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
 
   async function fetchDataFromGeminiProAPI() {
-    try {
-      // ONLY TEXT
-      if (!inputText) {
-        toast.error("Please enter text!");
-        return;
-      }
-      setLoading(true);
-      const genAI = new GoogleGenerativeAI(API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-      const result = await model.generateContent(inputText);
-      const text = result.response.text();
-      setLoading(false);
-      setData(text);
-    } catch (error) {
-      setLoading(false);
-      console.error("fetchDataFromGeminiAPI error: ", error);
-    }
+    // Implement this function if needed
   }
 
-  async function fetchDataFromGeminiProVisionAPI() {
+  async function fetchDataFromGeminiProVisionAPI(compressedFile) {
     try {
       if (!inputText) {
         toast.error("Please enter text!");
         return;
-      }
-
-      const fileInputEl = document.querySelector("input[type=file]");
-      if (
-        !fileInputEl ||
-        !fileInputEl.files ||
-        fileInputEl.files.length === 0
-      ) {
-        throw new Error("No file uploaded!"); // Throw an error if no file is uploaded
       }
 
       setLoading(true);
@@ -65,9 +38,9 @@ function App() {
       const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
 
-      const imageParts = await Promise.all(
-        [...fileInputEl.files].map(fileToGenerativePart)
-      );
+      const imageParts = await Promise.all([
+        fileToGenerativePart(compressedFile),
+      ]);
       const nonImageFiles = imageParts.filter(
         (part) => !part.inlineData.mimeType.startsWith("image/")
       );
@@ -77,18 +50,18 @@ function App() {
         return;
       }
 
-      // Set imageData to the uploaded image
       const imageDataURLs = imageParts.map((part) => part.inlineData.data);
       setImageData(imageDataURLs);
-      const photoDataURL = URL.createObjectURL(fileInputEl.files[0]);
+      const photoDataURL = URL.createObjectURL(compressedFile);
       setPhotoURL(photoDataURL);
+
       const result = await model.generateContent([inputText, ...imageParts]);
       const text = result.response.text();
 
       setLoading(false);
       setData(text);
     } catch (error) {
-      toast.error(error.message); // Display the error message using toast
+      toast.error(error.message);
       setLoading(false);
       console.error("fetchDataFromGeminiAPI error: ", error);
     }
@@ -109,13 +82,45 @@ function App() {
     setIsOpen(false);
   };
 
+  async function handleImageUpload(event) {
+    try {
+      setImageFile(event.target.files[0]);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function handleButtonClick() {
+    try {
+      if (!imageFile) {
+        toast.error("Please select an image!");
+        return;
+      }
+
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+
+      const compressedFile = await imageCompression(imageFile, options);
+      fetchDataFromGeminiProVisionAPI(compressedFile);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <>
       <Box bg="gray.800" color="white" height="100vh" paddingTop={130}>
         <Container maxW="3xl" centerContent>
           <Header></Header>
           <div className="card">
-            <input type="file" onChange={(e) => setImageData(e.target.files)} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageUpload(e)}
+            ></input>
 
             <Button
               bg="blue.500"
@@ -124,7 +129,7 @@ function App() {
               width="100%"
               _hover={{ bg: "blue.700" }}
               disabled={loading}
-              onClick={() => fetchDataFromGeminiProVisionAPI()}
+              onClick={handleButtonClick}
             >
               {loading ? "Loading..." : "Extract Text"}
             </Button>
