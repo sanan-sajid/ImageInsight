@@ -7,7 +7,11 @@ import { Container, Box } from "@chakra-ui/react";
 import Header from "./components/Header";
 import { Button } from "@chakra-ui/react";
 import KeywordsModal from "./components/KeywordsModal";
-
+import Footer from "./components/Footer";
+const options = {
+  apiKey: "free", // Get API keys from: www.bytescale.com
+  maxFileCount: 1,
+};
 function App() {
   const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
   const [data, setData] = useState(undefined);
@@ -107,11 +111,12 @@ function App() {
 
   return (
     <>
-      <Box bg="blue.600" color="white" height="100vh" paddingTop={130}>
+      <Box bg="gray.800" color="white" height="100vh" paddingTop={130}>
         <Container maxW="3xl" centerContent>
           <Header></Header>
           <div className="card">
             <input type="file" onChange={(e) => setImageData(e.target.files)} />
+
             <Button
               bg="blue.500"
               color="white"
@@ -132,7 +137,7 @@ function App() {
             closeModal={closeModal}
             imageData={photoURL}
           />
-
+          <Footer />
           <ToastContainer />
         </Container>
       </Box>
