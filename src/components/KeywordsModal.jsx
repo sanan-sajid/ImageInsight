@@ -11,6 +11,8 @@ import {
   CircularProgress,
   Image,
   Flex,
+  Box,
+  useMediaQuery,
 } from "@chakra-ui/react";
 
 const KeywordsModal = ({
@@ -20,6 +22,8 @@ const KeywordsModal = ({
   closeModal,
   imageData,
 }) => {
+  const [isLargerThan768] = useMediaQuery("(min-width: 768px)");
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={closeModal}>
@@ -27,16 +31,25 @@ const KeywordsModal = ({
         <ModalContent maxW="800px">
           <ModalHeader>Keywords</ModalHeader>
           <ModalCloseButton />
-          <ModalBody display="flex" alignItems="center">
+          <ModalBody
+            display="flex"
+            alignItems="center"
+            flexDirection={isLargerThan768 ? "row" : "column"}
+          >
             {loading ? (
               <CircularProgress isIndeterminate color="blue.300" />
             ) : (
-              <Flex>
+              <Box>
                 {imageData && (
-                  <Image src={imageData} alt="Uploaded" maxH="300px" mr={4} />
+                  <Image
+                    src={imageData}
+                    alt="Uploaded"
+                    maxH={isLargerThan768 ? "300px" : "auto"}
+                    mb={isLargerThan768 ? 0 : 4}
+                  />
                 )}
                 <Text>{keywords}</Text>
-              </Flex>
+              </Box>
             )}
           </ModalBody>
 
