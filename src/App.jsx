@@ -22,10 +22,6 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
 
-  async function fetchDataFromGeminiProAPI() {
-    // Implement this function if needed
-  }
-
   async function fetchDataFromGeminiProVisionAPI(compressedFile) {
     try {
       if (!inputText) {
