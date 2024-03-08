@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 import { Container, Box } from "@chakra-ui/react";
 import Header from "./components/Header";
-import { Button } from "@chakra-ui/react";
+import { Button, Input } from "@chakra-ui/react";
 import KeywordsModal from "./components/KeywordsModal";
 import imageCompression from "browser-image-compression";
 import Footer from "./components/Footer";
@@ -16,24 +16,20 @@ function App() {
   const [photoURL, setPhotoURL] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [imageData, setImageData] = useState(null);
-  const [inputText, setInputText] = useState(
-    "Explain this image in around 50 words"
-  );
+  const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
 
   async function fetchDataFromGeminiProVisionAPI(compressedFile) {
     try {
       if (!inputText) {
-        toast.error("Please enter text!");
-        return;
+        setInputText("Explain this image in around 50 words");
       }
 
       setLoading(true);
       setIsOpen(true);
       const genAI = new GoogleGenerativeAI(API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
-
       const imageParts = await Promise.all([
         fileToGenerativePart(compressedFile),
       ]);
@@ -56,6 +52,7 @@ function App() {
 
       setLoading(false);
       setData(text);
+      setInputText("");
     } catch (error) {
       toast.error(error.message);
       setLoading(false);
@@ -93,6 +90,11 @@ function App() {
         return;
       }
 
+      if (!inputText) {
+        toast.info("Generating text about the picture in 50 words...");
+        setInputText("Explain this image in around 50 words");
+      }
+
       const options = {
         maxSizeMB: 1,
         maxWidthOrHeight: 1920,
@@ -117,10 +119,20 @@ function App() {
               accept="image/*"
               onChange={(e) => handleImageUpload(e)}
             ></input>
-
+            <Input
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              placeholder="Explain this image in around 50 words"
+              variant="filled"
+              marginBottom={4}
+              color="black"
+              bg="blue.700"
+              focusBackgroundColor="blue.700"
+              style={{ color: "white" }}
+            />
             <Button
               bg="blue.500"
-              color="white"
+              color="black"
               marginTop={4}
               width="100%"
               _hover={{ bg: "blue.700" }}
